@@ -6,4 +6,3 @@
 
 mysql数据库 --frank课程
 
-[图片](https://ae03.alicdn.com/kf/H5110f78b1f4648ac8486bbbce458ec54b.jpg)
