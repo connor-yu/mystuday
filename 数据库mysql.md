@@ -745,6 +745,188 @@ name varchar(20) comment '姓名'
 );
 ```
 
+### 5.数据库完整性
+
+实体完整性，域完整性，参照完整性，自定义完整性
+
+设计数据库保证：
+
+字段完整，保证实体的完整性（一张表里应当有主键约束）
+
+有些字段可以为空，有些不能为空；default
+
+可能需要对外部进行引用
+
+### 6.外键
+
+```mysql
+create table stu(
+stuID int(4) primary key,
+name varchar(20)
+); 
+```
+
+```mysql
+create table eatery(
+id int primary key,
+money decimal(10,4),
+stuID int(4),
+foreign key (stuID) references stu(stuID)
+);
+```
+
+实际开发中（尤其并发处理）禁止使用外键
+
+后期添加：
+
+```mysql
+alter table eatery_2 add foreign key (stuID) references stu(stuID);
+```
+
+### 7.置空和级联
+
+一般情况下，再删除的时候使用置空操作，不使用级联
+
+级联操作会把所有的信息全部改变
+
+> 置空操作一般情况下是留给外界进行删除数据的
+>
+> 级联操作一般是留给外界更新数据的
+
+演示：
+
+
+```mysql
+create table stu(
+stuID int(4) primary key,
+name varchar(20)
+);
+```
+
+```mysql
+create table eatery(
+id int(20) primary key,
+money decimal(10, 4),
+stuId int(4),
+foreign key(stuId) references stu(stuId) on delete set null on update cascade
+    #删除设置置空，更新设置级联
+);
+```
+
+ ```mysql
+insert into stu values(1, 'frank');
+insert into stu values(2, 'jerry');
+ ```
+
+```mysql
+insert into eatery values(1,20.5,2);
+insert into eatery values(2,453.4,1);
+insert into eatery values(3,56.3,1);
+insert into eatery values(4,11.5,2);
+insert into eatery values(5,6.5,1);
+```
+
+级联操作：
+
+```mysql
+update stu set stuId='4' where name='frank';
+
+mysql> select * from stu;
++-------+-------+
+| stuID | name  |
++-------+-------+
+|     2 | jerry |
+|     4 | frank |
++-------+-------+
+2 rows in set (0.00 sec)
+
+mysql> select * from eatery;
++----+----------+-------+
+| id | money    | stuId |
++----+----------+-------+
+|  1 |  20.5000 |     2 |
+|  2 | 453.4000 |     4 |
+|  3 |  56.3000 |     4 |
+|  4 |  11.5000 |     2 |
+|  5 |   6.5000 |     4 |
++----+----------+-------+
+5 rows in set (0.00 sec)
+```
+
+置空操作：
+
+```mysql
+delete from stu where stuId='2';
+
+mysql> select * from stu;
++-------+-------+
+| stuID | name  |
++-------+-------+
+|     4 | frank |
++-------+-------+
+1 row in set (0.00 sec)
+
+mysql> select * from eatery;
++----+----------+-------+
+| id | money    | stuId |
++----+----------+-------+
+|  1 |  20.5000 |  NULL |
+|  2 | 453.4000 |     4 |
+|  3 |  56.3000 |     4 |
+|  4 |  11.5000 |  NULL |
+|  5 |   6.5000 |     4 |
++----+----------+-------+
+5 rows in set (0.00 sec)
+```
+
+
+
+## 六、数据库设计思维
+
+关系？关系型数据库 两张表的共有字段去确定数据的完整性
+
+行？ 一条数据、记录、实体
+
+列？ 一个字段、属性
+
+
+
+
+
+## 七、单表查询
+
+
+
+
+
+
+
+## 八、多表查询
+
+
+
+
+
+
+
+## 九、子查询
+
+
+
+
+
+
+
+## 十、高级部分
+
+
+
+
+
+
+
+## 十一、企业规范约束
+
 
 
 
