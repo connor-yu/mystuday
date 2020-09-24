@@ -883,49 +883,425 @@ mysql> select * from eatery;
 
 ## 六、数据库设计思维
 
+### 1.数据库设计基本概念
+
 关系？关系型数据库 两张表的共有字段去确定数据的完整性
 
 行？ 一条数据、记录、实体
 
 列？ 一个字段、属性
 
+OOP 
 
+数据库冗余（优点：提高性能；缺点：数据太多，不好维护）只能减少，不能避免
 
+数据的完整行
 
+### 2.实体和实体之间的关系
+
+一对一
+
+一对多
+
+多对一
+
+多对多
+
+### 3.Code第一范式 确保每列原子性
+
+例：
+
+时间段2018-2019，拆分为2018和2019两个
+
+确保字段的原子性（原子不能再分）
+
+### 4.Code第二范式 非键字段必须依赖键字段
+
+就是别他妈没事找事
+
+例：student表
+
+学生表里填学生的基本信息，不能说学生有多少钱，花多少钱都放进去
+
+不该有的东西不该有，和student基础信息没关系的全部干掉
+
+### 5.Code第三范式 消除传递依赖
+
+**根据项目的需求来，没有标准**
+
+例：大学成绩
+
+有些情况，查询的时候直接返回语数外总分给字段，没必要设置总分字段，是多余的
+
+（大学没有总分）
+
+高考成绩：肯定要给
 
 ## 七、单表查询
 
+### 1.select
+
+```mysql
+mysql> select '去你妈的';
++----------+
+| 去你妈的 |
++----------+
+| 去你妈的 |
++----------+
+1 row in set (0.00 sec)
+
+mysql> select 2*7;
++-----+
+| 2*7 |
++-----+
+|  14 |
++-----+
+1 row in set (0.00 sec)
+```
+
+#as 取别名,as可以省略
+
+```mysql
+mysql> select 'Go fuck youself' as qnmd;
++-----------------+
+| qnmd            |
++-----------------+
+| Go fuck youself |
++-----------------+
+1 row in set (0.00 sec)
+```
+
+### 2.from
+
+来自哪张表 ，主要使用笛卡尔积
+
+例：
+
+```mysql
+create table t1(
+id int(11),
+name varchar(20)
+);
+insert into t1 values(1,'frank');
+insert into t1 values(2,'jerry');
+
+create t2(
+score1 int(20),
+score2 int(20)
+);
+insert into t2 values(98,98);
+insert into t2 values(933,91);
+```
+
+```mysql
+mysql> select * from t1,t2;
++------+-------+--------+--------+
+| id   | name  | score1 | score2 |
++------+-------+--------+--------+
+|    1 | frank |     98 |     98 |
+|    2 | jerry |     98 |     98 |
+|    1 | frank |    933 |     91 |
+|    2 | jerry |    933 |     91 |
++------+-------+--------+--------+
+4 rows in set (0.00 sec)
+```
 
 
 
+### 3.dual
+
+dual 默认伪表
+
+```mysql
+mysql> select 2*7 as res from dual;
++-----+
+| res |
++-----+
+|  14 |
++-----+
+1 row in set (0.00 sec)
+```
+
+### 4.where
+
+条件筛选
+
+```mysql
+select * from t3 where age <= 18;
+```
+
+### 5.in / not...
+
+```mysql
+select * from t4 where address in('beijing','shanghai');
+```
+
+### 6.between...and... / not...
+
+```mysql
+select * from t3 where age>=15 and age<=20;
+select * from t3 where age between 15 and 20; #包括20和15
+```
+
+### 7.is null /not...
+
+```mysql
+select * from t3 where age is null;
+```
+
+### 8.聚合函数
+
+主要是做统计用的
+
+```mysql
+select sum(chinese) from score; #求成绩总和
+select avg(chinese) from score; #求成绩平均值
+select max(chinese) from score; #求成绩最大值
+select min(chinese) from score; #求成绩最小值
+select count(chinese) from score; #统计成绩次数
+```
+
+```mysql
+select count(*) ...; #不要用，知道就行
+```
+
+### 9.like模糊查询
+
+```mysql
+select * from student where name like '张%';
+```
+
+%代表一个或多个字符
+
+```mysql
+select * from student where name like '张_';
+```
+
+_代表一个字符
+
+### 10.order by排序查询
+
+```mysql
+select * from score order by chinese asc;
+```
+
+按照语文成绩排序，升序
+
+**desc 降序**
+
+### 11.group by 分组查询
+
+```mysql
+select avg(age) as '年龄' , gender '性别' from info group by gender;
+```
+
+分别求男和女的平均年龄
+
+```mysql
+select avg(age) as '年龄' , address '地区' from info group by address;
+```
+
+分别求北京和上海地区的平均年龄
+
+### 12.group_concat
+
+```mysql
+select group_concat(name), gander from student group by gender;
+```
+
+聚合显示出名字和
+
+### 13.having
+
+不是对数据库中的数据进行筛选，而是查询后的结果进行筛选
+
+对查询过后的数据不能用where
+
+```mysql
+select avg(age) as 'age', address as 'address' from info group by address having age>24;
+```
+
+前半部分是查询出来结果，形成一张虚拟的表，having 后根据形成的虚拟的表在进行查询(where)
+
+注意添加别名（as...）便于筛选
+
+### 14.limit
+
+```mysql
+select * from info limit 1,3;
+```
+
+从第二条数据开始往后查三个
+
+```mysql
+select * from info order by age desc limit 3;
+```
+
+查出这张表中年龄最大的三个人的数据，降序
+
+### 15.distinct / all
+
+```mysql
+select distinct address from info;
+```
+
+查找去重
+
+默认情况是all，通常忽略
 
 
 
 ## 八、多表查询
 
+### 1.union联合查询
 
+```mysql
+select age,gender from info union select 'name',phone from teachar;
+```
 
+当两个表两个字段一样的时候，去重
 
+```mysql
+select age,gender from info union distinct select 'name',phone from teachar;
+```
 
+### 2.Inner join
 
+innor join内连接，有公共字段
+
+```mysql
+select name,score from student innor join score on student.id=score.stuid;
+```
+
+两张表联合起来表示
+
+### 3.left join
+
+左连接
+
+以左表为基准（谁在左边就以谁为主）
+
+### 4.right join
+
+右查询
+
+### 5.cross join
+
+```mysql
+select * from t1 cross join t3;
+```
+
+返回笛卡尔积
+
+### 6.natural join
+
+自然连接
+
+```mysql
+select * from t1 natural join t3;
+```
+
+不用写两边公共的字段名，但是必须是字段名是一样的
+
+默认自然内连接，同理还有自然左连接，自然右连接
+
+### 6.无公共同名字段的自然连接返回笛卡尔积
+
+### 7.using
+
+当两张表字段都是一样的时候
+
+```mysql
+select * from t1 inner join t3 using(id);
+```
+
+（跟自然连接的效果是一样的）
+
+### 8.哪一个连接实用？
+
+看需求
 
 ## 九、子查询
 
+### 1.子查询基本语法
+
+```mysql
+select * from student where id in (select stuid from score where score>=85);
+```
+
+### 2.in和not in
 
 
 
+### 3.exists 和not exosts
 
 
 
 ## 十、高级部分
 
+### 1.视图
 
+1-5
+
+### 2.事务
+
+6-10
+
+### 3.索引
+
+11
+
+### 4.存储过程
+
+12-13
+
+### 5.有趣的函数
+
+14-16
 
 
 
 
 
 ## 十一、企业规范约束
+
+### 1.库表字段约束规范
+
+是不是VIP 字段：is_vip  类型：unsigned tinyint  长度：1
+
+表名，字段名必须使用小写字母开头，不能数字开头，不能出现大写字母，分割单词必须用 “ _ ” 隔开
+
+在windows下，默认不分大小写，但是在Linux下默认分大小写
+
+表名不能出现复数，“students、teachers...”
+
+凡是有小数的，不允许使用float，double，全部用decimal
+
+如果需要的字符串很小，用char（定长），不要用varchar（varchar是可变长度字符串，不预分配内存空间，不建议超过5000，超过直接定义长文本text类型）
+
+> 强制要求，表里必须定义三个字段，缺一不可(id,create_time,update_time)：
+>
+> id 必须为主键primary key，类型为bigint，无符号类型，单表的时候必须设为自增
+>
+> create_time、update_time 强制要求为datatime类型
+
+定义年龄一般为tinyint，无符号的
+
+### 2.索引规范
+
+
+
+
+
+
+
+
+
+### 3.SQL开发约束
+
+
+
+### 4.其他约束
 
 
 
