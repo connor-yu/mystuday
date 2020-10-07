@@ -193,15 +193,10 @@ address varchar(100) default '暂时未知' comment '住址'
 
 
 > id name age 字段
->
 > auto_increment 自动增长
->
 > primary key 主键 最主要的 靠它来区分学生这张表 唯一的（一般情况下添加在id后边，不在name加，考虑重名的情况）
->
 > comment 注释
->
 > not null 不能为空
->
 > default 默认值
 
 
@@ -1239,29 +1234,321 @@ select * from student where id in (select stuid from score where score>=85);
 
 ## 十、高级部分
 
-### 1.视图
+### （1）视图 1-5
 
-1-5
+#### 1.开场
 
-### 2.事务
+防止有关人员看到不该看到的内容（某人银行账户有**钱）
 
-6-10
+刻意（有意）隐藏表的结构
 
-### 3.索引
+从某种意义上来说降低复杂度
 
-11
+#### 2.view视图创建、使用、作用
 
-### 4.存储过程
+创建视图
 
-12-13
+```mysql
+create view vw_stu as select name,phone from student;
+```
 
-### 5.有趣的函数
+```mysql
+select * from vw_stu;
+```
 
-14-16
+下次不用写SQL语句了，直接查看视图就可以看到了
+
+保护隐私
+
+#### 3.显示视图
+
+```mysql
+show tables;
+```
+
+显示出来有视图，最好带前缀，好区分
+
+```mysql
+desc vm_stu;
+```
+
+```mysql
+show create vw_stu;
+```
+
+显示出来所有视图的信息（B格）
+
+```mysql
+show table status where comment='view' \G
+```
+
+#### 4.更新和删除视图
+
+更新：
+
+```mysql
+alter view vw_stu_all as select name from student;
+```
+
+删除：
+
+```mysql
+drop view vw_stu_all;
+```
+
+#### 5.视图算法temptable(临时表算法)，merge(合并) 
+
+undefined(未定义的)
+
+创建视图的时候，可以指定视图算法
+
+```mysql
+create algorithm=temptable view vw_stu_all as select name,phone from student;
+```
+
+### （2）事务 6-10
+
+#### 6.事务的提出
+
+买东西的时候，点击立即购买之后，没付款，问：没付款的钱去哪了？更新到支付宝账户上？还是没更新？
+
+转账的时候有个提示，是否确定
+
+事务：transaction
+
+#### 7.transaction
+
+开启事务：
+
+```mysql
+start transaction;
+```
+
+转账操作：
+
+```mysql
+update wallet set balance=balance-50 where id=1;
+update wallet set balance=balance+50 where id=2;
+```
+
+提交：
+
+```mysql
+commit;
+```
+
+回滚（退货）：
+
+```mysql
+rollback;
+```
+
+只要commit就不能rollback（已经收到货了，不能退款了）
+
+#### 8.rollback to 回滚点
+
+git版本控制/虚拟机快照
+
+```mysql
+start transaction;
+savepoint four;
+...
+...
+rollback to four;
+commit;
+```
+
+four之前的所有数据保留，four后边的都不要了
+
+#### 9.ACID(事务的4大特性)
+
+> atomicity 原子性
+> consistency 一致性
+> isolation 隔离性
+> durability 持久性
 
 
 
+#### 10.注意事项
 
+事务只有在指定数据库引擎为innoDB的时候才能用，并不是都能用
+
+创建数据库的时候可以指定数据库引擎
+
+### （3）索引 index 11
+
+#### 11.索引
+
+缺点：增删改效率变低（不是一般的低）
+
+> 主键索引 primary key
+> 唯一键索引
+> 普通索引
+> 全局索引（搜索引擎使用）、sphinx
+
+创建索引：
+
+```mysql
+create index balance_index on wallet(balance);
+```
+
+唯一索引：
+
+```mysql
+create unique index balance_index on t2(score1);
+```
+
+删除索引：
+
+```mysql
+drop index balance_index on wallet;
+```
+
+
+
+数据经常被搜索，经常查（高考总分，无所谓）
+公共字段
+如果表里数据非常少，千万不要创建索引
+性别，不要创建索引
+
+### 4.存储过程 12-13
+
+#### 12.delimiter
+
+```mysql
+delimiter //
+```
+
+不在以分好结束，而以//结束
+
+
+
+#### 13.procedure 存储过程的用途
+
+```mysql
+create procedure proc()
+begin
+update wallet set balance=balance+50;
+update t3 set name='tom'
+end//
+```
+
+```mysql
+delimiter ;
+call proc();
+```
+
+删除：
+
+```mysql
+drop procedure proc;
+```
+
+查看定义的存储过程
+
+```mysql
+show create procedure proc;
+```
+
+### 5.有趣的函数 14-16
+
+#### 14.number
+
+生成一个随机数：
+
+```mysql
+select rand();
+```
+
+```mysql
+select ceil(3.1);	#向上取整
+select round(3.1);	#四舍五入
+select floor(3.1);	#向下取整
+select truncate(3.141592654,2);	#截取数字
+```
+
+
+
+选人抽奖：
+
+```mysql
+select * from student order by rand() limit 3;
+```
+
+随机排序：
+
+```mysql
+select * from student order by rand();
+```
+
+#### 15.string
+
+```mysql
+select ucase ('abcd!');		#转化为大写	ABCD!
+select lcase('ABC!');	#转化为小写	abc!
+select left('FUCK!',2);		#截取字符串	FU
+select right('FUCK!',2);		#截取字符串	K!
+select substring('FUCK!',2,3);		#截取字符串	UCK
+select concat('FUCK','agdadaji');	#拼接字符串
+```
+
+把name和age分开查询
+
+```mysql
+select concat(name,'|',age) from student;
+
+mysql> select concat(name,'|',age) from student;
++----------------------+
+| concat(name,'|',age) |
++----------------------+
+| frank|43             |
+| jerry|21             |
+| tom|19               |
+| connor|18            |
++----------------------+
+4 rows in set (0.00 sec)
+```
+
+#### 16.others
+
+```mysql
+select now();	#获取当前的时间
+
++---------------------+
+| now()               |
++---------------------+
+| 2020-09-29 19:52:44 |
++---------------------+
+1 row in set (0.00 sec)
+
+select unix_timestamp();	#时间戳
+```
+
+```mysql
+select year(now()) year, month(now()) month, day(now()) day;
+
+mysql> select year(now()) year, month(now()) month, day(now()) day;
++------+-------+------+
+| year | month | day  |
++------+-------+------+
+| 2020 |     9 |   29 |
++------+-------+------+
+1 row in set (0.00 sec)
+```
+
+加密函数：
+
+```mysql
+select sha('ajbdabuiabf');
+
+mysql> select sha('ajbdabuiabf');
++------------------------------------------+
+| sha('ajbdabuiabf')                       |
++------------------------------------------+
+| 45e9c6fadd544265b90f997c9844516d8409ad2b |
++------------------------------------------+
+1 row in set (0.00 sec)
+```
 
 ## 十一、企业规范约束
 
@@ -1275,29 +1562,48 @@ select * from student where id in (select stuid from score where score>=85);
 
 表名不能出现复数，“students、teachers...”
 
+索引名一般命名
+
+> pk_xxx	主键
+> uk_xxx	唯一索引
+> idx_xxx	非唯一索引
+
 凡是有小数的，不允许使用float，double，全部用decimal
 
 如果需要的字符串很小，用char（定长），不要用varchar（varchar是可变长度字符串，不预分配内存空间，不建议超过5000，超过直接定义长文本text类型）
 
-> 强制要求，表里必须定义三个字段，缺一不可(id,create_time,update_time)：
->
+> 强制要求，表里必须定义三个字段，缺一不可(id, create_time, update_time)：
 > id 必须为主键primary key，类型为bigint，无符号类型，单表的时候必须设为自增
->
 > create_time、update_time 强制要求为datatime类型
 
 定义年龄一般为tinyint，无符号的
+龟年龄比较长smallint，无符号的
 
 ### 2.索引规范
 
+业务和流程上有唯一特性的字段，即使他是多的字段的组合，也应该设置一个唯一索引
 
+多表查询，如果join那么数据类型必须一致
 
+多表关联查询，关联查询的字段应该有索引
 
+页面上的搜索不使用左模糊或全模糊
 
-
-
-
+如果varchar建立索引，必须制定长度，没必要在全字段建立索引
 
 ### 3.SQL开发约束
+
+不要妄想使用count(xxx,xxx,xxx,...)来代替count(*)，不可能，完全不是一个概念，即便把所有的列名都写完，最后发现NULL的没有统计
+
+如果某一列的值全是NULL，注意count
+
+判断是不是空的一定不能用where name=NULL;，可以where name is null，一定用isnull()这个函数来判断
+
+不要使用外键和级联，有不代表使用，尤其是在高并发集群的时候
+
+一切外键的问题在应用层解决
+
+
 
 
 
