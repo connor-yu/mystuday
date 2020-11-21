@@ -706,7 +706,7 @@ alter table t_8 drop primary key;
 ```mysql 
 create table t_9(
 id int primary key,
-phone varchar(20) unipue
+phone varchar(20) unique
 );
 ```
 
