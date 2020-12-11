@@ -1,3 +1,18 @@
+# 配置
+
+```shell
+git config --global user.name "Your Name"
+git config --global user.email "email@example.com"
+
+eg:
+git config --global user.name "connor-yu"
+git config --global user.email "2199602593@qq.com"
+```
+
+
+
+
+
 # 远程仓库改变，同步本地
 
 1、查看远程仓库
